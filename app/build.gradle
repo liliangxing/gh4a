@@ -18,7 +18,9 @@ ext {
         ClientId = clientProps['ClientId']
         ClientSecret = clientProps['ClientSecret']
     } else {
-        println 'client.properties not found or incomplete'
+        println 'client.properties not found or incomplete, using default empty values'
+        ClientId = '""'
+        ClientSecret = '""'
     }
 }
 
