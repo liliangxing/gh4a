@@ -252,6 +252,11 @@ public class Github4AndroidActivity extends BaseActivity implements
                 .appendQueryParameter(PARAM_SCOPE, LoginModeChooserFragment.SCOPES)
                 .appendQueryParameter(PARAM_CALLBACK_URI, CALLBACK_URI.toString())
                 .build();
-        IntentUtils.openInCustomTabOrBrowser(activity, uri);
+        // 使用普通浏览器 Intent 打开 OAuth 页面
+        // Custom Tab 的 gh4a://oauth 自定义 scheme 回调在某些 Android 版本上不可靠
+        // 普通浏览器会触发系统 Intent 解析，正确跳回 App
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
+        browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        activity.startActivity(browserIntent);
     }
 }
