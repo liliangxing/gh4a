@@ -59,25 +59,45 @@ Main features
 
 How to Build Octodroid
 ----------------------
-- Ensure Android SDK platform and build-tools are installed
-- Register an application for your OctoDroid usage under your [GitHub settings](https://github.com/settings/developers)
-  * naming is up to you
-  * callback URL must be gh4a://oauth
-- Create a client.properties file with the following content:
-```
-ClientId="<CLIENT ID DISPLAYED IN APPLICATION SETTINGS>"
-ClientSecret="<CLIENT SECRET DISPLAYED IN APPLICATION SETTINGS>"
-```
 
-- Build using Gradle
+### 登录方式
+
+App 支持两种登录方式，推荐用 **Token 登录**（不需要配置任何东西）：
+
+#### 方式一：Token 登录（推荐 ✅）
+
+1. 打开 https://github.com/settings/tokens
+2. 点 "Generate new token (classic)"
+3. 勾选权限：`repo`、`user`、`gist`、`read:org`、`notifications`
+4. 生成 Token，复制
+5. 打开 App → 选 "Login using access token" → 粘贴 → 登录成功
+
+**不需要 `client.properties`，不需要注册 OAuth App。**
+
+#### 方式二：OAuth 浏览器登录
+
+1. 在 https://github.com/settings/developers 注册一个 OAuth App
+   - Callback URL **必须填** `gh4a://oauth`
+2. 在源码根目录创建 `client.properties`：
+   ```
+   ClientId=你的client_id
+   ClientSecret=你的client_secret
+   ```
+3. 构建 APK（见下方）
+
+### 构建 APK
+
+- 确保安装了 Android SDK platform 和 build-tools
 
 ```bash
+# 用 GitHub Actions 自动构建（推荐）
+# Push 到 master 分支后会自动触发，APK 在 workflow artifacts 中
+
+# 或者本地构建
 ./gradlew assembleDebug
 ```
 
-- To get a full list of available tasks
-
-```bash
+APK 产物：`app/build/outputs/apk/debug/app-debug.apk`
 ./gradlew tasks
 ```
 
