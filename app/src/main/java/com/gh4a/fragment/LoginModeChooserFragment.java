@@ -93,7 +93,7 @@ public class LoginModeChooserFragment extends DialogFragment implements
             }
         };
 
-        mModeGroup.check(R.id.oauth_button);
+        mModeGroup.check(R.id.token_button);
 
         TextView oauthHint = view.findViewById(R.id.oauth_hint);
         replaceURLSpansIfNeeded(oauthHint.getText());

@@ -46,7 +46,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        tools:visibility="visible">
+        android:visibility="visible">
+
+        <com.gh4a.widget.LinkHandlingTextView
+            android:id="@+id/token_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/login_summary_token"
+            app:needsLinkHandling="true" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/token_wrapper"

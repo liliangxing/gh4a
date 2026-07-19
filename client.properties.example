@@ -1,0 +1,10 @@
+# GitHub OAuth App 配置
+# 
+# 要使用 OAuth 浏览器登录，需要在 https://github.com/settings/developers
+# 注册一个 OAuth App，设置 Callback URL 为 gh4a://oauth
+# 
+# 如果不配置这个文件，OAuth 浏览器登录不可用，
+# 但 Personal Access Token 登录不受影响，可以直接用。
+#
+# ClientId=你的client_id
+# ClientSecret=你的client_secret
