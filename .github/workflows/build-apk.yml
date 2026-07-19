@@ -1,0 +1,47 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create client.properties
+        run: |
+          cat > client.properties << EOF
+          ClientId=${{ secrets.CLIENT_ID }}
+          ClientSecret=${{ secrets.CLIENT_SECRET }}
+          EOF
+        # 如果在 repo settings 中没有配置 CLIENT_ID/CLIENT_SECRET secrets，
+        # OAuth 登录会不可用，但 Token 登录不受影响
+
+      - name: Build debug APK
+        run: |
+          cd app
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gh4a-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Build release APK (unsigned)
+        if: false  # 需要签名配置才能发布 release
+        run: |
+          cd app
+          ./gradlew assembleRelease

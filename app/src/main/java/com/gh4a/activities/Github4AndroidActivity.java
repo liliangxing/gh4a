@@ -16,9 +16,11 @@
 package com.gh4a.activities;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.IdRes;
@@ -209,6 +211,14 @@ public class Github4AndroidActivity extends BaseActivity implements
 
     @Override
     public void onLoginStartOauth() {
+        if (TextUtils.isEmpty(BuildConfig.CLIENT_ID)) {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.credentials_error_no_oauth_title)
+                    .setMessage(R.string.credentials_error_no_oauth_message)
+                    .setPositiveButton(R.string.ok, null)
+                    .show();
+            return;
+        }
         launchOauthLogin(this);
     }
 
