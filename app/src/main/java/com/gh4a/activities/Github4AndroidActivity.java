@@ -22,9 +22,9 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
+import androidx.browser.customtabs.CustomTabsIntent;
 
 import com.gh4a.utils.ActivityResultHelpers;
 import com.google.android.material.appbar.AppBarLayout;
@@ -74,21 +74,6 @@ public class Github4AndroidActivity extends BaseActivity implements
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     finish();
-                }
-            });
-
-    private final ActivityResultLauncher<Intent> mOauthLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    String code = result.getData().getStringExtra(LoginWebViewActivity.EXTRA_RESULT_CODE);
-                    if (code != null) {
-                        handleOauthCode(code);
-                    } else {
-                        onLoginCanceled();
-                    }
-                } else {
-                    onLoginCanceled();
                 }
             });
 
@@ -256,9 +241,10 @@ public class Github4AndroidActivity extends BaseActivity implements
     }
 
     public static Intent createOauthLoginIntent(Context context, String oauthUrl) {
-        Intent intent = new Intent(context, LoginWebViewActivity.class);
-        intent.putExtra(LoginWebViewActivity.EXTRA_OAUTH_URL, oauthUrl);
-        return intent;
+        CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
+                .build();
+        customTabsIntent.intent.setData(Uri.parse(oauthUrl));
+        return customTabsIntent.intent;
     }
 
     public static String buildOauthUrl() {
@@ -273,7 +259,8 @@ public class Github4AndroidActivity extends BaseActivity implements
 
     public void launchOauthLogin() {
         String oauthUrl = buildOauthUrl();
-        Intent intent = createOauthLoginIntent(this, oauthUrl);
-        mOauthLauncher.launch(intent);
+        CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
+                .build();
+        customTabsIntent.launchUrl(this, Uri.parse(oauthUrl));
     }
 }

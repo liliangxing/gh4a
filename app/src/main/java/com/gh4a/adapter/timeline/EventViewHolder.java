@@ -90,9 +90,13 @@ class EventViewHolder
                 if (mIsPullRequest) {
                     yield R.drawable.issue_event_closed;
                 }
-                yield switch (event.stateReason()) {
+                var sr = event.stateReason();
+                if (sr == null) {
+                    yield R.drawable.issue_event_closed_completed;
+                }
+                yield switch (sr) {
                     case NotPlanned, Duplicate -> R.drawable.issue_event_closed;
-                    case null, default -> R.drawable.issue_event_closed_completed;
+                    default -> R.drawable.issue_event_closed_completed;
                 };
             }
             case Reopened -> R.drawable.issue_event_reopened;
@@ -129,17 +133,24 @@ class EventViewHolder
                             ? R.string.pull_request_event_closed_with_commit
                             : R.string.pull_request_event_closed;
                 } else {
-                    textResId = switch (event.stateReason()) {
-                        case NotPlanned -> commitId != null
-                                ? R.string.issue_event_closed_not_planned_with_commit
-                                : R.string.issue_event_closed_not_planned;
-                        case Duplicate -> commitId != null
-                                ? R.string.issue_event_closed_duplicate_with_commit
-                                : R.string.issue_event_closed_duplicate;
-                        case null, default -> commitId != null
+                    var sr = event.stateReason();
+                    if (sr == null) {
+                        textResId = commitId != null
                                 ? R.string.issue_event_closed_completed_with_commit
                                 : R.string.issue_event_closed_completed;
-                    };
+                    } else {
+                        textResId = switch (sr) {
+                            case NotPlanned -> commitId != null
+                                    ? R.string.issue_event_closed_not_planned_with_commit
+                                    : R.string.issue_event_closed_not_planned;
+                            case Duplicate -> commitId != null
+                                    ? R.string.issue_event_closed_duplicate_with_commit
+                                    : R.string.issue_event_closed_duplicate;
+                            default -> commitId != null
+                                    ? R.string.issue_event_closed_completed_with_commit
+                                    : R.string.issue_event_closed_completed;
+                        };
+                    }
                 }
             }
             case Reopened -> {
