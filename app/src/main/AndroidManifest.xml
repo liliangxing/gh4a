@@ -149,6 +149,11 @@
             android:name=".activities.SettingsActivity"
             android:title="@string/settings" />
 
+        <activity
+            android:name=".activities.LoginWebViewActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
+
         <activity android:name=".resolver.BrowseFilter"
             android:excludeFromRecents="true"
             android:taskAffinity=""

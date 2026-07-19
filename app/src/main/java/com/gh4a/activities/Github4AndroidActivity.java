@@ -16,11 +16,13 @@
 package com.gh4a.activities;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 
@@ -39,7 +41,6 @@ import com.gh4a.R;
 import com.gh4a.ServiceFactory;
 import com.gh4a.fragment.LoginModeChooserFragment;
 import com.gh4a.utils.ApiHelpers;
-import com.gh4a.utils.IntentUtils;
 import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.core.ServiceGenerator;
 import com.meisolsson.githubsdk.model.User;
@@ -73,6 +74,21 @@ public class Github4AndroidActivity extends BaseActivity implements
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     finish();
+                }
+            });
+
+    private final ActivityResultLauncher<Intent> mOauthLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    String code = result.getData().getStringExtra(LoginWebViewActivity.EXTRA_RESULT_CODE);
+                    if (code != null) {
+                        handleOauthCode(code);
+                    } else {
+                        onLoginCanceled();
+                    }
+                } else {
+                    onLoginCanceled();
                 }
             });
 
@@ -121,29 +137,33 @@ public class Github4AndroidActivity extends BaseActivity implements
                 return true;
             }
 
-            OAuthService service = ServiceGenerator.createAuthService();
-            RequestToken request = RequestToken.builder()
-                    .clientId(BuildConfig.CLIENT_ID)
-                    .clientSecret(BuildConfig.CLIENT_SECRET)
-                    .code(code)
-                    .build();
-
-            service.getToken(request)
-                    .map(ApiHelpers::throwOnFailure)
-                    .flatMap(token -> {
-                        UserService userService = ServiceFactory.get(UserService.class, true,
-                                null, token.accessToken(), null);
-                        Single<User> userSingle = userService.getUser()
-                                .map(ApiHelpers::throwOnFailure);
-                        return Single.zip(Single.just(token), userSingle,
-                                (t, user) -> Pair.create(t.accessToken(), user));
-                    })
-                    .compose(RxUtils::doInBackground)
-                    .subscribe(pair -> onLoginFinished(pair.first, pair.second), this::handleLoadFailure);
+            handleOauthCode(code);
             return true;
         }
 
         return false;
+    }
+
+    private void handleOauthCode(String code) {
+        OAuthService service = ServiceGenerator.createAuthService();
+        RequestToken request = RequestToken.builder()
+                .clientId(BuildConfig.CLIENT_ID)
+                .clientSecret(BuildConfig.CLIENT_SECRET)
+                .code(code)
+                .build();
+
+        service.getToken(request)
+                .map(ApiHelpers::throwOnFailure)
+                .flatMap(token -> {
+                    UserService userService = ServiceFactory.get(UserService.class, true,
+                            null, token.accessToken(), null);
+                    Single<User> userSingle = userService.getUser()
+                            .map(ApiHelpers::throwOnFailure);
+                    return Single.zip(Single.just(token), userSingle,
+                            (t, user) -> Pair.create(t.accessToken(), user));
+                })
+                .compose(RxUtils::doInBackground)
+                .subscribe(pair -> onLoginFinished(pair.first, pair.second), this::handleLoadFailure);
     }
 
     @Override
@@ -209,7 +229,7 @@ public class Github4AndroidActivity extends BaseActivity implements
 
     @Override
     public void onLoginStartOauth() {
-        launchOauthLogin(this);
+        launchOauthLogin();
     }
 
     @Override
@@ -235,13 +255,25 @@ public class Github4AndroidActivity extends BaseActivity implements
         mProgress.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
-    public static void launchOauthLogin(Activity activity) {
-        Uri uri = Uri.parse(OAUTH_URL)
+    public static Intent createOauthLoginIntent(Context context, String oauthUrl) {
+        Intent intent = new Intent(context, LoginWebViewActivity.class);
+        intent.putExtra(LoginWebViewActivity.EXTRA_OAUTH_URL, oauthUrl);
+        return intent;
+    }
+
+    public static String buildOauthUrl() {
+        return Uri.parse(OAUTH_URL)
                 .buildUpon()
                 .appendQueryParameter(PARAM_CLIENT_ID, BuildConfig.CLIENT_ID)
                 .appendQueryParameter(PARAM_SCOPE, LoginModeChooserFragment.SCOPES)
                 .appendQueryParameter(PARAM_CALLBACK_URI, CALLBACK_URI.toString())
-                .build();
-        IntentUtils.openInCustomTabOrBrowser(activity, uri);
+                .build()
+                .toString();
+    }
+
+    public void launchOauthLogin() {
+        String oauthUrl = buildOauthUrl();
+        Intent intent = createOauthLoginIntent(this, oauthUrl);
+        mOauthLauncher.launch(intent);
     }
 }
