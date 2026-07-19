@@ -13,16 +13,18 @@ if (clientPropFile.canRead()) {
 }
 
 ext {
-    ClientId = '""'
-    ClientSecret = '""'
     if (clientProps.containsKey('ClientId')
             && clientProps.containsKey('ClientSecret')) {
         ClientId = clientProps['ClientId']
         ClientSecret = clientProps['ClientSecret']
     } else {
-        println 'client.properties not found or incomplete, using defaults'
+        println 'client.properties not found or incomplete'
     }
 }
+
+// 定义默认值（如果 client.properties 不存在）
+def defaultClientId = '""'
+def defaultClientSecret = '""'
 
 android {
     compileSdk 36
@@ -34,8 +36,8 @@ android {
         applicationId "com.gh4a"
         resourceConfigurations += ['en']
 
-        buildConfigField 'String', 'CLIENT_ID', ClientId
-        buildConfigField 'String', 'CLIENT_SECRET', ClientSecret
+        buildConfigField 'String', 'CLIENT_ID', rootProject.ext.has('ClientId') ? rootProject.ext.ClientId : defaultClientId
+        buildConfigField 'String', 'CLIENT_SECRET', rootProject.ext.has('ClientSecret') ? rootProject.ext.ClientSecret : defaultClientSecret
     }
 
     signingConfigs {
