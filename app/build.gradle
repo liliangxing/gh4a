@@ -13,14 +13,14 @@ if (clientPropFile.canRead()) {
 }
 
 ext {
+    ClientId = '""'
+    ClientSecret = '""'
     if (clientProps.containsKey('ClientId')
             && clientProps.containsKey('ClientSecret')) {
         ClientId = clientProps['ClientId']
         ClientSecret = clientProps['ClientSecret']
     } else {
-        println 'client.properties not found or incomplete, using default empty values'
-        ClientId = '""'
-        ClientSecret = '""'
+        println 'client.properties not found or incomplete, using defaults'
     }
 }
 
