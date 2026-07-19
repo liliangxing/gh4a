@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OctoDroid</string>
+    <string name="channel_notifications_name">GitHub 通知</string>
+    <string name="channel_notifications_description">来自 GitHub 的通知</string>
+
+    <string name="introduction">请使用下方按钮登录 GitHub 以使用全部功能。\n\n您也可以使用左侧滑出菜单浏览 GitHub 的部分内容。</string>
+    <string name="loading_msg">加载中...</string>
+    <string name="saving_msg">保存中...</string>
+    <string name="deleting_msg">删除中...</string>
+    <string name="repo_not_found_toast">仓库未找到</string>
+    <string name="logout">退出登录</string>
+    <string name="login">登录</string>
+    <string name="cancel">取消</string>
+    <string name="ok">确定</string>
+    <string name="save">保存</string>
+    <string name="delete">删除</string>
+    <string name="edit">编辑</string>
+    <string name="search">搜索</string>
+    <string name="bookmarks">书签</string>
+    <string name="about">关于</string>
+    <string name="issue">Issue</string>
+    <string name="commit">提交</string>
+    <string name="fork">Fork</string>
+    <string name="share">分享</string>
+    <string name="open_in_browser">在浏览器中打开</string>
+    <string name="notifications">通知</string>
+    <string name="notification_interval">通知检查间隔</string>
+    <string name="theme">主题</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="mark_all_as_read">全部标为已读</string>
+    <string name="retry">重试</string>
+</resources>

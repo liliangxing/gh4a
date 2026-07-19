@@ -123,6 +123,7 @@ public class Gh4Application extends Application implements
         mPt = new PrettyTime();
         ServiceFactory.initClient(this);
 
+        NotificationsWorker.createNotificationChannels(this);
         updateNotificationWorker(prefs);
     }
 
