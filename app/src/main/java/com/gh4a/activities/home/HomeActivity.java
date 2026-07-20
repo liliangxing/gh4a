@@ -1,14 +1,11 @@
 package com.gh4a.activities.home;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Pair;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.AttrRes;
 import androidx.annotation.ColorInt;
 import androidx.annotation.IdRes;
@@ -30,12 +27,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.gh4a.BaseFragmentPagerActivity;
-import com.gh4a.BuildConfig;
 import com.gh4a.Gh4Application;
 import com.gh4a.R;
 import com.gh4a.ServiceFactory;
 import com.gh4a.activities.Github4AndroidActivity;
-import com.gh4a.activities.LoginWebViewActivity;
 import com.gh4a.activities.UserActivity;
 import com.gh4a.fragment.LoginModeChooserFragment;
 import com.gh4a.fragment.NotificationListFragment;
@@ -44,18 +39,12 @@ import com.gh4a.fragment.SettingsFragment;
 import com.gh4a.utils.ActivityResultHelpers;
 import com.gh4a.utils.ApiHelpers;
 import com.gh4a.utils.AvatarHandler;
-import com.gh4a.utils.RxUtils;
 import com.gh4a.utils.UiUtils;
-import com.meisolsson.githubsdk.core.ServiceGenerator;
 import com.meisolsson.githubsdk.model.User;
-import com.meisolsson.githubsdk.model.request.RequestToken;
-import com.meisolsson.githubsdk.service.OAuthService;
 import com.meisolsson.githubsdk.service.activity.NotificationService;
 import com.meisolsson.githubsdk.service.users.UserService;
 
 import java.util.HashMap;
-
-import io.reactivex.Single;
 
 public class HomeActivity extends BaseFragmentPagerActivity implements
         View.OnClickListener, RepositoryListContainerFragment.Callback,
@@ -95,17 +84,6 @@ public class HomeActivity extends BaseFragmentPagerActivity implements
                 if (themeChanged) {
                     goToToplevelActivity();
                     finish();
-                }
-            });
-
-    private final ActivityResultLauncher<Intent> mOauthLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    String code = result.getData().getStringExtra(LoginWebViewActivity.EXTRA_RESULT_CODE);
-                    if (code != null) {
-                        handleOauthCode(code);
-                    }
                 }
             });
 
@@ -374,31 +352,7 @@ public class HomeActivity extends BaseFragmentPagerActivity implements
 
     @Override
     public void onLoginStartOauth() {
-        String oauthUrl = Github4AndroidActivity.buildOauthUrl();
-        Intent intent = Github4AndroidActivity.createOauthLoginIntent(this, oauthUrl);
-        mOauthLauncher.launch(intent);
-    }
-
-    private void handleOauthCode(String code) {
-        OAuthService service = ServiceGenerator.createAuthService();
-        RequestToken request = RequestToken.builder()
-                .clientId(BuildConfig.CLIENT_ID)
-                .clientSecret(BuildConfig.CLIENT_SECRET)
-                .code(code)
-                .build();
-
-        service.getToken(request)
-                .map(ApiHelpers::throwOnFailure)
-                .flatMap(token -> {
-                    UserService userService = ServiceFactory.get(UserService.class, true,
-                            null, token.accessToken(), null);
-                    Single<User> userSingle = userService.getUser()
-                            .map(ApiHelpers::throwOnFailure);
-                    return Single.zip(Single.just(token), userSingle,
-                            (t, user) -> Pair.create(t.accessToken(), user));
-                })
-                .compose(RxUtils::doInBackground)
-                .subscribe(pair -> onLoginFinished(pair.first, pair.second), this::onLoginFailed);
+        Github4AndroidActivity.launchOauthLogin(this);
     }
 
     @Override
