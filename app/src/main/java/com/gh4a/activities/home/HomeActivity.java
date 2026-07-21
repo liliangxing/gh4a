@@ -31,6 +31,7 @@ import com.gh4a.Gh4Application;
 import com.gh4a.R;
 import com.gh4a.ServiceFactory;
 import com.gh4a.activities.Github4AndroidActivity;
+import com.gh4a.activities.LoginWebViewActivity;
 import com.gh4a.activities.UserActivity;
 import com.gh4a.fragment.LoginModeChooserFragment;
 import com.gh4a.fragment.NotificationListFragment;
@@ -369,6 +370,21 @@ public class HomeActivity extends BaseFragmentPagerActivity implements
     @Override
     public void onLoginCanceled() {
         // Nothing to do
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == Github4AndroidActivity.REQUEST_LOGIN_WEBVIEW) {
+            if (resultCode == RESULT_OK && data != null) {
+                String code = data.getStringExtra(LoginWebViewActivity.EXTRA_AUTH_CODE);
+                if (code != null) {
+                    Github4AndroidActivity.handleAuthCode(code, this);
+                    return;
+                }
+            }
+            onLoginCanceled();
+        }
     }
 
     @Override

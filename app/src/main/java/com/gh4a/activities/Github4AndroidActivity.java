@@ -24,7 +24,6 @@ import com.gh4a.R;
 import com.gh4a.ServiceFactory;
 import com.gh4a.fragment.LoginModeChooserFragment;
 import com.gh4a.utils.ApiHelpers;
-import com.gh4a.utils.IntentUtils;
 import com.gh4a.utils.RxUtils;
 import com.meisolsson.githubsdk.core.ServiceGenerator;
 import com.meisolsson.githubsdk.model.User;
@@ -39,13 +38,10 @@ import io.reactivex.Single;
  */
 public class Github4AndroidActivity extends BaseActivity implements
         View.OnClickListener, LoginModeChooserFragment.ParentCallback {
-    private static final String OAUTH_URL = "https://github.com/login/oauth/authorize";
-    private static final String PARAM_CLIENT_ID = "client_id";
-    private static final String PARAM_CODE = "code";
-    private static final String PARAM_SCOPE = "scope";
-    private static final String PARAM_CALLBACK_URI = "redirect_uri";
+    public static final int REQUEST_LOGIN_WEBVIEW = 1001;
 
     private static final Uri CALLBACK_URI = Uri.parse("gh4a://oauth");
+    private static final String PARAM_CODE = "code";
 
     private View mContent;
     private View mProgress;
@@ -95,6 +91,21 @@ public class Github4AndroidActivity extends BaseActivity implements
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_LOGIN_WEBVIEW) {
+            if (resultCode == RESULT_OK && data != null) {
+                String code = data.getStringExtra(LoginWebViewActivity.EXTRA_AUTH_CODE);
+                if (code != null) {
+                    handleAuthCode(code, this);
+                    return;
+                }
+            }
+            onLoginCanceled();
+        }
+    }
+
     private boolean handleIntent(Intent intent) {
         Uri data = intent.getData();
         if (data != null
@@ -105,30 +116,34 @@ public class Github4AndroidActivity extends BaseActivity implements
                 onLoginCanceled();
                 return true;
             }
-
-            OAuthService service = ServiceGenerator.createAuthService();
-            RequestToken request = RequestToken.builder()
-                    .clientId(BuildConfig.CLIENT_ID)
-                    .clientSecret(BuildConfig.CLIENT_SECRET)
-                    .code(code)
-                    .build();
-
-            service.getToken(request)
-                    .map(ApiHelpers::throwOnFailure)
-                    .flatMap(token -> {
-                        UserService userService = ServiceFactory.get(UserService.class, true,
-                                null, token.accessToken(), null);
-                        Single<User> userSingle = userService.getUser()
-                                .map(ApiHelpers::throwOnFailure);
-                        return Single.zip(Single.just(token), userSingle,
-                                (t, user) -> Pair.create(t.accessToken(), user));
-                    })
-                    .compose(RxUtils::doInBackground)
-                    .subscribe(pair -> onLoginFinished(pair.first, pair.second), this::handleLoadFailure);
+            handleAuthCode(code, this);
             return true;
         }
 
         return false;
+    }
+
+    public static void handleAuthCode(String code, LoginModeChooserFragment.ParentCallback callback) {
+        OAuthService service = ServiceGenerator.createAuthService();
+        RequestToken request = RequestToken.builder()
+                .clientId(BuildConfig.CLIENT_ID)
+                .clientSecret(BuildConfig.CLIENT_SECRET)
+                .code(code)
+                .build();
+
+        service.getToken(request)
+                .map(ApiHelpers::throwOnFailure)
+                .flatMap(token -> {
+                    UserService userService = ServiceFactory.get(UserService.class, true,
+                            null, token.accessToken(), null);
+                    Single<User> userSingle = userService.getUser()
+                            .map(ApiHelpers::throwOnFailure);
+                    return Single.zip(Single.just(token), userSingle,
+                            (t, user) -> Pair.create(t.accessToken(), user));
+                })
+                .compose(RxUtils::doInBackground)
+                .subscribe(pair -> callback.onLoginFinished(pair.first, pair.second),
+                        callback::onLoginFailed);
     }
 
     @Override
@@ -221,12 +236,7 @@ public class Github4AndroidActivity extends BaseActivity implements
     }
 
     public static void launchOauthLogin(Activity activity) {
-        Uri uri = Uri.parse(OAUTH_URL)
-                .buildUpon()
-                .appendQueryParameter(PARAM_CLIENT_ID, BuildConfig.CLIENT_ID)
-                .appendQueryParameter(PARAM_SCOPE, LoginModeChooserFragment.SCOPES)
-                .appendQueryParameter(PARAM_CALLBACK_URI, CALLBACK_URI.toString())
-                .build();
-        IntentUtils.openInCustomTabOrBrowser(activity, uri);
+        Intent intent = new Intent(activity, LoginWebViewActivity.class);
+        activity.startActivityForResult(intent, REQUEST_LOGIN_WEBVIEW);
     }
 }
